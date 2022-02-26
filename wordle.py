@@ -1,3 +1,6 @@
+import re
+
+
 def read_words():
     word_file = open("wordlist.txt", "r")
     words = word_file.read().splitlines()
@@ -46,8 +49,7 @@ def sort_words_by_deviation_from_mean(words):
         score = 0
         for letter in word:
             score += abs(letter_frequencies[letter] - average_frequency)
-        if score > 0:
-            word_scores.append((word, score))
+        word_scores.append((word, score))
     word_scores.sort(key=lambda x: x[1])
     return [x[0] for x in word_scores]
 
@@ -69,34 +71,12 @@ def positive_match(words, cmd):
 def negative_match(words, cmd):
     pos = int(cmd[0]) - 1
     letter = cmd[2]
-    result = []
-    for word in words:
-        if word[pos] == letter:
-            continue
-        letter_pos = word.find(letter)
-        if letter_pos == -1:
-            continue
-        if letter_pos == pos:
-            letter_pos = word.find(letter, pos + 1)
-            if letter_pos == -1:
-                continue
-        result.append(word)
-    return result
+    return [x for x in words if x[pos] != letter and x.find(letter) != -1]
 
 
 def letters_dont_exist(words, cmd):
-    letters = [x for x in cmd if x != "-"]
-    result = []
-    for word in words:
-        found = False
-        for letter in letters:
-            if letter in word:
-                found = True
-                break
-        if found:
-            continue
-        result.append(word)
-    return result
+    pattern = f".*[{cmd[1:]}].*"
+    return [x for x in words if not re.match(pattern, x)]
 
 
 def process_command(words, cmd):

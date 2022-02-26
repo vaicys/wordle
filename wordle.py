@@ -4,6 +4,7 @@ def read_words():
     word_file.close()
     return words
 
+
 def calculate_letter_frequencies(words):
     letter_frequencies = {}
     for word in words:
@@ -14,8 +15,11 @@ def calculate_letter_frequencies(words):
                 letter_frequencies[letter] += 1
     return letter_frequencies
 
-def sort_words_by_score(words, letter_frequencies):
+
+def sort_words_by_letter_frequency(words):
     word_scores = []
+    letter_frequencies = calculate_letter_frequencies(words)
+
     for word in words:
         current_word = []
         score = 0
@@ -31,6 +35,23 @@ def sort_words_by_score(words, letter_frequencies):
     word_scores.sort(reverse=True, key=lambda x: x[1])
     return [x[0] for x in word_scores]
 
+
+def sort_words_by_deviation_from_mean(words):
+    word_scores = []
+    letter_frequencies = calculate_letter_frequencies(words)
+    dict_values = letter_frequencies.values()
+    average_frequency = sum(dict_values) / len(dict_values)
+
+    for word in words:
+        score = 0
+        for letter in word:
+            score += abs(letter_frequencies[letter] - average_frequency)
+        if score > 0:
+            word_scores.append((word, score))
+    word_scores.sort(key=lambda x: x[1])
+    return [x[0] for x in word_scores]
+
+
 def print_top_words(words):
     print()
     print(f"Current best words ({len(words)}):")
@@ -38,10 +59,12 @@ def print_top_words(words):
         print(words[i])
     print()
 
+
 def positive_match(words, cmd):
     pos = int(cmd[0]) - 1
     letter = cmd[1]
     return [x for x in words if x[pos] == letter]
+
 
 def negative_match(words, cmd):
     pos = int(cmd[0]) - 1
@@ -58,8 +81,8 @@ def negative_match(words, cmd):
             if letter_pos == -1:
                 continue
         result.append(word)
-        1
     return result
+
 
 def letters_dont_exist(words, cmd):
     letters = [x for x in cmd if x != "-"]
@@ -69,10 +92,12 @@ def letters_dont_exist(words, cmd):
         for letter in letters:
             if letter in word:
                 found = True
-                break;
-        if found: continue
+                break
+        if found:
+            continue
         result.append(word)
     return result
+
 
 def process_command(words, cmd):
     if cmd.find("!") != -1:
@@ -81,20 +106,25 @@ def process_command(words, cmd):
         return letters_dont_exist(words, cmd)
     return positive_match(words, cmd)
 
+
 def main():
     words = read_words()
-    letter_frequencies = calculate_letter_frequencies(words)
-    sorted_words = sort_words_by_score(words, letter_frequencies)
 
     print("Commands: [pos][letter] [pos]![letter] -[letter1]..[letterN]")
     print("Multiple commands allowed, separate by space.")
     print("Example: -adiu 5!e 1r")
 
+    starting_words = sort_words_by_letter_frequency(words)
+    print_top_words(starting_words)
+
     while True:
-        print_top_words(sorted_words)
         print("Command(s): ", end="")
         commands = input()
         for cmd in commands.split(" "):
-            sorted_words = process_command(sorted_words, cmd)
+            words = process_command(words, cmd)
+
+        words = sort_words_by_deviation_from_mean(words)
+        print_top_words(words)
+
 
 main()
